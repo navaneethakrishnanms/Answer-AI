@@ -1,0 +1,90 @@
+# AI Exam Evaluator Configuration
+
+ocr:
+  base_url: "https://api.ocr.space/parse/image"
+  timeout: 30
+  engine: 2  # OCREngine 2 for better handwriting recognition
+  language: "eng"
+  max_image_size_kb: 900
+  max_workers: 3  # Parallel processing limit
+
+ollama:
+  host: "http://localhost:11434"
+  models:
+    mapping: "qwen2.5:14b"
+    evaluation: "deepseek-r1:7b-qwen-distill-q8_0"
+  timeout: 300
+  temperature:
+    mapping: 0.05  # Very low for consistent structured output
+    evaluation: 0.05  # Very low for consistent marking
+
+storage:
+  upload_dir: "C:/Projects/Paper_AI/backend/uploads"
+  results_dir: "C:/Projects/Paper_AI/backend/results"
+  temp_dir: "C:/Projects/Paper_AI/backend/temp"
+  max_file_size_mb: 50
+
+# Exam structure: Section → Part → Question
+exam_rules:
+  sections:
+    - name: "A"
+      parts_count: 3          # 3 parts: A1, A2, A3
+      parts_to_answer: 2      # Student answers any 2 out of 3
+      max_marks: 10
+    - name: "B"
+      parts_count: 3
+      parts_to_answer: 2
+      max_marks: 20
+    - name: "C"
+      parts_count: 3
+      parts_to_answer: 2
+      max_marks: 20
+  
+  # Each part can have multiple questions with varying marks
+  # Example: A1 might have a 1-mark, 2-mark, and 4-mark question
+  
+  evaluation:
+    # 1-mark questions: STRICT (correct = full, wrong = zero)
+    one_mark_questions:
+      strict: true
+      partial_marks: false
+    
+    # True/False: STRICT (only T/F answer matters)
+    true_false:
+      strict: true
+      explanation_marks: false
+    
+    # Multi-mark questions: LIBERAL (concept-based, partial marks OK)
+    multi_mark_questions:
+      liberal: true
+      concept_based: true
+      allow_different_wording: true
+      allow_partial_understanding: true
+    
+    # Never penalize for:
+    penalties:
+      language_grammar: false
+      spelling: false
+      handwriting: false
+  
+  # Drop lowest rule
+  drop_lowest:
+    enabled: true
+    apply_when: "more_than_required"  # Only drop if student answered more than required
+
+pdf_processing:
+  dpi: 200
+  format: "jpeg"
+  compression_quality: 85
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "C:/Projects/Paper_AI/backend/logs/app.log"
+
+# Retry configuration for LLM calls
+retry:
+  max_attempts: 3
+  base_delay_seconds: 2
+  use_exponential_backoff: true
+  use_jitter: true
